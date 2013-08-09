@@ -20,9 +20,9 @@
 	// Do any additional setup after loading the view, typically from a nib.
     
     [LocationManager startUpdatingLocation:^(LocationManager *locationManager) {
-        
+        //开始定位
     } updateBlock:^(CLLocation *newLocation, CLLocation *oldLocation, NSError *error) {
-        
+        //定位结束
     } reverseGeocodEndBlcok:^(CLPlacemark *placemark, NSError *error) {
         UIAlertView *alertView=[[UIAlertView alloc] initWithTitle:[NSString stringWithFormat:@"经纬度:%f,%f",placemark.location.coordinate.latitude,placemark.location.coordinate.longitude]
                                                           message:[NSString stringWithFormat:@"地理信息:%@",placemark.description]

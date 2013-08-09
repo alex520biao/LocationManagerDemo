@@ -16,7 +16,7 @@
 @property(nonatomic,copy)DidUpdateToLocationBlcok didUpdateToLocationBlcok;//定位结束时的回调块
 @property(nonatomic,copy)ReverseGeocodEndBlcok reverseGeocodEndBlcok;//反编译结束时回调块
 
--(void)startUpdatingLocation:(DidStartToLocationBlcok)startBlock updateBlock:(DidUpdateToLocationBlcok)didUpdateToLocationBlock reverseGeocodEndBlcok:(ReverseGeocodEndBlcok)reverseGeocodEndBlcok;
++(LocationManager*)sharedLocationManager;
 @end
 
 @implementation LocationManager
@@ -86,14 +86,32 @@ static LocationManager *sharedLocationManager;
     self.didUpdateToLocationBlcok=didUpdateToLocationBlock;
     self.reverseGeocodEndBlcok=reverseGeocodEndBlcok;
     
-    [self.locManager startUpdatingLocation];
     /*回调方法:开始编辑时的回调方法*/
     if (self.didStartToLocationBlcok!=nil) {
+        [self.locManager startUpdatingLocation];
         self.didStartToLocationBlcok(self);
     }
 }
 
-#pragma mark custom
+-(void)startUpdatingLocation:(DidStartToLocationBlcok)startBlock updateBlock:(DidUpdateToLocationBlcok)updateBlock{
+    [self startUpdatingLocation:startBlock updateBlock:updateBlock reverseGeocodEndBlcok:nil];
+}
+
+-(void)startReverseGeocodeLocation:(CLLocation*)location endBlcok:(ReverseGeocodEndBlcok)endBlcok{
+    [self.geocoder reverseGeocodeLocation:location completionHandler:^(NSArray *placemarks, NSError *error){
+        if (error) {
+            /*回调方法:反编译结束都回调方法*/
+            endBlcok(nil,error);
+        }else{
+            CLPlacemark *placemark = [placemarks objectAtIndex:0];
+            /*回调方法:反编译结束都回调方法*/
+            endBlcok(placemark,error);
+        }
+    }];
+}
+
+
+#pragma mark Class Methed
 +(void)startUpdatingLocation:(DidStartToLocationBlcok)startBlock updateBlock:(DidUpdateToLocationBlcok)didUpdateToLocationBlock reverseGeocodEndBlcok:(ReverseGeocodEndBlcok)reverseGeocodEndBlcok{
     LocationManager *manager=[LocationManager sharedLocationManager];    
     [manager startUpdatingLocation:startBlock updateBlock:didUpdateToLocationBlock reverseGeocodEndBlcok:reverseGeocodEndBlcok];
@@ -105,22 +123,26 @@ static LocationManager *sharedLocationManager;
 }
 
 +(void)startReverseGeocodeLocation:(CLLocation*)location endBlcok:(ReverseGeocodEndBlcok)endBlcok{
-    LocationManager *manager=[LocationManager sharedLocationManager];
+    LocationManager *manager=[LocationManager sharedLocationManager];    
     [manager.geocoder reverseGeocodeLocation:location completionHandler:^(NSArray *placemarks, NSError *error){
-        CLPlacemark *placemark = [placemarks objectAtIndex:0];
         if (error) {
             /*回调方法:反编译结束都回调方法*/
-            endBlcok(placemark,error);
+            endBlcok(nil,error);
         }else{
+            CLPlacemark *placemark = [placemarks objectAtIndex:0];
             /*回调方法:反编译结束都回调方法*/
             endBlcok(placemark,error);
         }
     }];
 }
 
++(CLLocation*)currentLocation{
+    LocationManager *manager=[LocationManager sharedLocationManager];
+    return manager.location;
+}
+
 #pragma mark CLLocationManagerDelegate
 - (void)locationManager:(CLLocationManager *)manager didUpdateToLocation:(CLLocation *)newLocation fromLocation:(CLLocation *)oldLocation{
-    
     [manager stopUpdatingLocation];
     self.location=newLocation;
     
@@ -130,10 +152,16 @@ static LocationManager *sharedLocationManager;
     }
     
     //反编译获取地点信息
-    if (self.reverseGeocodEndBlcok!=nil) {
-        [LocationManager startReverseGeocodeLocation:newLocation endBlcok:^(CLPlacemark *placemark,NSError *error) {
-            if (self.reverseGeocodEndBlcok!=nil) {
-                self.reverseGeocodEndBlcok(placemark,error);
+    if (self.reverseGeocodEndBlcok) {
+        __block LocationManager *locationManager=self;
+        [self.geocoder reverseGeocodeLocation:newLocation completionHandler:^(NSArray *placemarks, NSError *error){
+            if (error) {
+                /*回调方法:反编译结束都回调方法*/
+                locationManager.reverseGeocodEndBlcok(nil,error);
+            }else{
+                CLPlacemark *placemark = [placemarks objectAtIndex:0];
+                /*回调方法:反编译结束都回调方法*/
+                locationManager.reverseGeocodEndBlcok(placemark,error);
             }
         }];
     }
