@@ -9,6 +9,8 @@
 #import <Foundation/Foundation.h>
 #import <CoreLocation/CoreLocation.h>
 #import <ImageIO/ImageIO.h>
+#import <AssetsLibrary/AssetsLibrary.h>
+
 @interface NSDictionary (CLLocation)
 
 //图片的GPSDictionary转化为CLLocation对象

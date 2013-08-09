@@ -8,8 +8,6 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreLocation/CoreLocation.h>
-#import <AssetsLibrary/AssetsLibrary.h>
-#import <ImageIO/ImageIO.h>
 #import "CLLocation+GPSDictionary.h"
 #import "NSDictionary+CLLocation.h"
 
